@@ -290,6 +290,13 @@ Resources:
                 - chmod 600 /home/ec2-user/.aws/config && chmod 600 /home/ec2-user/.aws/credentials
                 - echo 'PATH=$PATH:/usr/local/bin' >> /home/ec2-user/.bashrc
                 - echo 'export PATH' >> /home/ec2-user/.bashrc
+                - echo '=== Installing helm and configure chart repository==='
+                - sudo -H -u ec2-user bash -c "curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash"
+                - sudo -H -u ec2-user bash -c "helm repo add stable https://charts.helm.sh/stable"
+                - chmod +x /usr/local/bin/helm
+                - sudo -H -u ec2-user bash -c "helm completion bash >> ~/.bash_completion"
+                - sudo -H -u ec2-user bash -c ". /etc/profile.d/bash_completion.sh"
+                - sudo -H -u ec2-user bash -c ". ~/.bash_completion"
                 - echo '=== CLEANING /home/ec2-user ==='
                 - for f in cloud9; do rm -rf /home/ec2-user/$f; done
                 - chown -R ec2-user:ec2-user /home/ec2-user/
