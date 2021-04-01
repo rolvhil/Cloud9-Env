@@ -138,7 +138,7 @@ Resources:
         Fn::GetAtt:
           - C9LambdaExecutionRole
           - Arn
-      Runtime: python3.6
+      Runtime: python3.8
       MemorySize: 256
       Timeout: '600'
       Code:
@@ -190,7 +190,8 @@ Resources:
 
                   except Exception as e:
                       # logger.error(e, exc_info=True)
-                      responseData = {'Error': traceback.format_exc(e)}
+                      # responseData = {'Error': traceback.format_exc(e)}
+                      responseData = {'Error': 'Error bootstrapping for instance: '+instance['InstanceId']}
                       cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
   ################## SSM BOOTSRAP HANDLER ###############
   C9OutputBucket:
@@ -221,7 +222,7 @@ Resources:
                 - yum -y remove aws-cli; yum -y install sqlite telnet jq strace tree gcc glibc-static python3 python3-pip gettext bash-completion
                 - echo '=== CONFIGURE default python version ==='
                 - PATH=$PATH:/usr/bin
-                - alternatives --set python /usr/bin/python3.6
+                - alternatives --set python /usr/bin/python3.8
                 - echo '=== INSTALL and CONFIGURE default software components ==='
                 - sudo -H -u ec2-user bash -c "pip install --user -U boto boto3 botocore awscli aws-sam-cli"
                 - echo '=== Resizing the Instance volume'
