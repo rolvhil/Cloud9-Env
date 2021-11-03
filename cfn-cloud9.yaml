@@ -13,24 +13,32 @@ Parameters:
       - t3.small
       - t3.medium
     ConstraintDescription: Must be a valid Cloud9 instance type
-  C9EnvType:
-    Description: Environment type.
-    Default: self
-    Type: String
-    AllowedValues:
-      - self
-      - 3rdParty    #use this if you will create cloud9 for another acount
-    ConstraintDescription: must specify self or 3rdParty.
-  OwnerArn:
-    Type: String
-    Description: The Arn of the Cloud9 Owner to be set if 3rdParty deployment.
+#  C9EnvType:
+#    Description: Environment type.
+#    Default: self
+#    Type: String
+#    AllowedValues:
+#      - self
+#      - 3rdParty    #use this if you will create cloud9 for another acount
+#    ConstraintDescription: must specify self or 3rdParty.
+#  OwnerArn:
+#    Type: String
+#    Description: The Arn of the Cloud9 Owner to be set if 3rdParty deployment.
   C9InstanceVolumeSize:
     Type: Number
     Description: The Size in GB of the Cloud9 Instance Volume.
     Default: 80
+  
+  SubnetId:
+    Type: String
+    Description: Subnetid where you wantt to launch your Cloud9 Instance, leave empty to launch on default vpc subnet
+  
+#Conditions:
+#  Create3rdPartyResources: !Equals [ !Ref C9EnvType, 3rdParty ]
 
-Conditions:
-  Create3rdPartyResources: !Equals [ !Ref C9EnvType, 3rdParty ]
+Conditions: 
+  HasSubnetId: !Not [ !Equals [ '', !Ref SubnetId ] ]
+  
 
 Resources:
   ################## PERMISSIONS AND ROLES #################
@@ -278,8 +286,8 @@ Resources:
                 - sudo -H -u ec2-user bash -c ". /etc/profile.d/bash_completion.sh"
                 - sudo -H -u ec2-user bash -c ". ~/.bash_completion"
                 - echo '=== CONFIGURE eksctl and setting ENVIRONMENT VARS ==='
-                - curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-                - mv /tmp/eksctl /usr/bin
+                - curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                - mv /tmp/eksctl /usr/local/bin
                 - sudo -H -u ec2-user bash -c "eksctl completion bash >> ~/.bash_completion"
                 - sudo -H -u ec2-user bash -c ". /etc/profile.d/bash_completion.sh"
                 - sudo -H -u ec2-user bash -c ". ~/.bash_completion"
@@ -336,9 +344,10 @@ Resources:
       AutomaticStopTimeMinutes: 3600
       InstanceType:
         Ref: C9InstanceType
+      SubnetId : !If [ HasSubnetId, !Ref SubnetId, !Ref "AWS::NoValue" ]
       Name:
         Ref: AWS::StackName
-      OwnerArn: !If [Create3rdPartyResources, !Ref OwnerArn, !Ref "AWS::NoValue" ]
+      #OwnerArn: !If [Create3rdPartyResources, !Ref OwnerArn, !Ref "AWS::NoValue" ]
       Tags:
         -
           Key: SSMBootstrap
